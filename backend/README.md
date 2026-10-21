@@ -142,4 +142,3 @@ This executes 21 automated unit and integration tests covering:
 * Malformed URLs and unsupported schemes
 * **Zero network request verification** (verifying that no socket or DNS traffic is generated)
 * Determinism verification (identical inputs yield identical scores)
-

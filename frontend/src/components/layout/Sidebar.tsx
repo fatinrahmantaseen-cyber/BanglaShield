@@ -1,12 +1,12 @@
 'use client';
 
 import React from 'react';
-import { 
-  Radar, 
-  MessageSquareWarning, 
-  Layers, 
+import {
+  Radar,
+  MessageSquareWarning,
+  Layers,
   Server,
-  FileCode2 
+  FileCode2
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -50,7 +50,7 @@ export function Sidebar({ currentTab = 'scanner', onSelectTab, backendOnline }: 
   return (
     <aside className="w-full lg:w-64 shrink-0">
       <div className="flex flex-col gap-6 rounded-xl border border-slate-800/80 bg-slate-900/40 p-4 backdrop-blur-sm">
-        
+
         {/* Navigation list */}
         <div>
           <h2 className="px-3 text-xs font-semibold tracking-wider text-slate-400 uppercase">

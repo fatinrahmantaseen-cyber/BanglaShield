@@ -2,7 +2,7 @@ import { HeuristicIndicator, RiskLevel, ScanResult } from '@/types/scanner';
 
 /**
  * BanglaShield Client-Side Utilities & Fallback Simulator
- * 
+ *
  * Used for pre-validation and offline demo fallback if backend is offline.
  * Zero external network calls.
  */
@@ -39,7 +39,7 @@ const SUSPICIOUS_TLDS = ['.xyz', '.top', '.buzz', '.fit', '.work', '.click', '.g
 export function isValidUrl(input: string): boolean {
   if (!input || typeof input !== 'string') return false;
   const trimmed = input.trim();
-  
+
   try {
     const parsed = new URL(trimmed);
     return parsed.protocol === 'http:' || parsed.protocol === 'https:';

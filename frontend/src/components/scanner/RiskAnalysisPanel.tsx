@@ -1,12 +1,12 @@
 'use client';
 
 import React from 'react';
-import { 
-  ShieldCheck, 
-  ShieldAlert, 
-  AlertTriangle, 
-  CheckCircle2, 
-  XCircle, 
+import {
+  ShieldCheck,
+  ShieldAlert,
+  AlertTriangle,
+  CheckCircle2,
+  XCircle,
   Radar,
   ServerCrash,
   Info
@@ -159,7 +159,7 @@ export function RiskAnalysisPanel({
 
   return (
     <div className={`rounded-xl border bg-slate-900/50 backdrop-blur-sm overflow-hidden ${badgeConfig.glow}`}>
-      
+
       {/* Result Header Banner */}
       <div className={`p-5 sm:p-6 border-b ${badgeConfig.bannerBg}`}>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -173,8 +173,8 @@ export function RiskAnalysisPanel({
                   {badgeConfig.title}
                 </span>
                 <span className={`rounded-full border px-2 py-0.5 text-[10px] font-mono font-medium ${
-                  isLiveApi 
-                    ? 'border-cyan-500/40 bg-cyan-950/60 text-cyan-300' 
+                  isLiveApi
+                    ? 'border-cyan-500/40 bg-cyan-950/60 text-cyan-300'
                     : 'border-amber-500/40 bg-amber-950/60 text-amber-300'
                 }`}>
                   {isLiveApi ? 'FastAPI Backend Engine' : 'Simulation Fallback'}

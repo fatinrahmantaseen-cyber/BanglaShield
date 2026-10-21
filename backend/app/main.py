@@ -69,7 +69,7 @@ async def health_check() -> HealthResponse:
 )
 async def scan_url(payload: UrlScanRequest) -> UrlScanResponse:
     """Analyze a URL for structural risk indicators without external network traffic.
-    
+
     Security note:
     Submitted URLs are never printed or logged to server output to protect sensitive paths.
     """

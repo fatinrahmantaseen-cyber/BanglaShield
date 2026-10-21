@@ -67,4 +67,3 @@ class HealthResponse(BaseModel):
     status: Literal["healthy"] = "healthy"
     service: str
     version: str
-

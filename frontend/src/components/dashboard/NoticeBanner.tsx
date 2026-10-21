@@ -16,7 +16,7 @@ export function NoticeBanner({ backendOnline }: NoticeBannerProps) {
         <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-cyan-500/20 text-cyan-400 border border-cyan-500/40">
           <Server className="h-4.5 w-4.5" aria-hidden="true" />
         </div>
-        
+
         <div className="flex-1 space-y-1">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2">

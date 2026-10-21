@@ -139,7 +139,7 @@ def test_reject_excessively_long_url(client: TestClient):
 
 def test_scan_zero_network_requests(client: TestClient, monkeypatch):
     """Verify that scanning NEVER attempts external network connections or DNS lookups.
-    
+
     We monkeypatch socket.getaddrinfo and socket.socket.connect to ensure that
     no external resolution or non-loopback connections are made.
     """

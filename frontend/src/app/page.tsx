@@ -17,7 +17,7 @@ export default function DashboardPage() {
   const [history, setHistory] = useState<ScanHistoryItem[]>([]);
   const [resultCache, setResultCache] = useState<Record<string, ScanResult>>({});
   const [currentTab, setCurrentTab] = useState<string>('scanner');
-  
+
   // Backend connection state
   const [backendOnline, setBackendOnline] = useState<boolean | null>(null);
   const [connectionError, setConnectionError] = useState<string | null>(null);
@@ -127,13 +127,13 @@ export default function DashboardPage() {
 
       {/* Main Content Area */}
       <main className="flex-1 mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-        
+
         {/* Educational & Architecture Notice Banner */}
         <NoticeBanner backendOnline={backendOnline} />
 
         {/* Responsive Layout with Sidebar and Main Panel */}
         <div className="flex flex-col lg:flex-row gap-6">
-          
+
           {/* Navigation Sidebar */}
           <Sidebar
             currentTab={currentTab}
@@ -143,7 +143,7 @@ export default function DashboardPage() {
 
           {/* Primary Security Workspace */}
           <div className="flex-1 space-y-6">
-            
+
             {/* Session Activity & Summary Metrics */}
             <SecurityCards metrics={metrics} />
 
@@ -164,10 +164,10 @@ export default function DashboardPage() {
             />
 
             {/* Recent Scans In-Memory List */}
-            <RecentScans 
-              history={history} 
-              onSelectScan={handleSelectHistoricalScan} 
-              onClearHistory={handleClearHistory} 
+            <RecentScans
+              history={history}
+              onSelectScan={handleSelectHistoricalScan}
+              onClearHistory={handleClearHistory}
             />
 
           </div>

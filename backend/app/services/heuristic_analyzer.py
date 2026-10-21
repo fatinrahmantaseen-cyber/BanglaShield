@@ -91,7 +91,7 @@ def _is_ip_address(host: str) -> bool:
 
 def validate_and_normalize_url(raw_url: str) -> Tuple[str, str]:
     """Validate URL string boundaries, scheme, and presence of a valid hostname.
-    
+
     Returns:
         Tuple of (normalized_url, hostname)
     Raises:
@@ -132,12 +132,12 @@ def validate_and_normalize_url(raw_url: str) -> Tuple[str, str]:
 
 def analyze_url_heuristics(raw_url: str) -> UrlScanResponse:
     """Perform deterministic, offline heuristic structural analysis on a URL.
-    
+
     NEVER makes any network calls.
     """
     normalized_url, hostname = validate_and_normalize_url(raw_url)
     parsed = urlsplit(normalized_url)
-    
+
     indicators: List[HeuristicIndicator] = []
     cumulative_score = 0
 

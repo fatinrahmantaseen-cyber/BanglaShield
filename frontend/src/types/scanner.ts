@@ -1,6 +1,6 @@
 /**
  * BanglaShield - TypeScript Type Definitions
- * 
+ *
  * Defines standard interfaces for URL scanning, risk categories,
  * heuristic breakdown, and session history matching the FastAPI backend schema.
  */

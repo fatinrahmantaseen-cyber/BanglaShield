@@ -1,2 +1,1 @@
 """Heuristic analysis services package."""
-

@@ -11,4 +11,3 @@ def test_health_check_returns_ok(client: TestClient):
     assert data["status"] == "healthy"
     assert "BanglaShield" in data["service"]
     assert "version" in data
-
