@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { Radar, MessageSquareWarning } from 'lucide-react';
 import { Navbar } from '@/components/layout/Navbar';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { NoticeBanner } from '@/components/dashboard/NoticeBanner';
@@ -8,20 +9,45 @@ import { SecurityCards } from '@/components/dashboard/SecurityCards';
 import { UrlScannerForm } from '@/components/scanner/UrlScannerForm';
 import { RiskAnalysisPanel } from '@/components/scanner/RiskAnalysisPanel';
 import { RecentScans } from '@/components/scanner/RecentScans';
-import { scanUrlApi, checkBackendHealth, BackendConnectionError, ValidationError } from '@/lib/api';
-import { ScanResult, ScanHistoryItem, SessionMetrics } from '@/types/scanner';
+import { MessageScannerForm } from '@/components/message/MessageScannerForm';
+import { MessageAnalysisPanel } from '@/components/message/MessageAnalysisPanel';
+import { RecentMessages } from '@/components/message/RecentMessages';
+import {
+  scanUrlApi,
+  analyzeMessageApi,
+  checkBackendHealth,
+  BackendConnectionError,
+  ValidationError
+} from '@/lib/api';
+import {
+  ScanResult,
+  ScanHistoryItem,
+  MessageScanResult,
+  MessageHistoryItem,
+  SessionMetrics
+} from '@/types/scanner';
 
 export default function DashboardPage() {
-  const [currentResult, setCurrentResult] = useState<ScanResult | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [history, setHistory] = useState<ScanHistoryItem[]>([]);
-  const [resultCache, setResultCache] = useState<Record<string, ScanResult>>({});
   const [currentTab, setCurrentTab] = useState<string>('scanner');
+
+  // URL Scanner state
+  const [currentUrlResult, setCurrentUrlResult] = useState<ScanResult | null>(null);
+  const [isUrlLoading, setIsUrlLoading] = useState<boolean>(false);
+  const [urlHistory, setUrlHistory] = useState<ScanHistoryItem[]>([]);
+  const [urlResultCache, setUrlResultCache] = useState<Record<string, ScanResult>>({});
+  const [prefilledUrl, setPrefilledUrl] = useState<string>('');
+
+  // Message Scanner state
+  const [currentMessageResult, setCurrentMessageResult] = useState<MessageScanResult | null>(null);
+  const [isMessageLoading, setIsMessageLoading] = useState<boolean>(false);
+  const [messageHistory, setMessageHistory] = useState<MessageHistoryItem[]>([]);
+  const [messageResultCache, setMessageResultCache] = useState<Record<string, MessageScanResult>>({});
 
   // Backend connection state
   const [backendOnline, setBackendOnline] = useState<boolean | null>(null);
   const [connectionError, setConnectionError] = useState<string | null>(null);
-  const [serverError, setServerError] = useState<string | null>(null);
+  const [urlServerError, setUrlServerError] = useState<string | null>(null);
+  const [messageServerError, setMessageServerError] = useState<string | null>(null);
 
   // Check health on mount
   const verifyHealth = useCallback(async () => {
@@ -50,36 +76,41 @@ export default function DashboardPage() {
     };
   }, []);
 
-  // Derive metrics strictly from session scans
-  const metrics: SessionMetrics = {
-    totalScans: history.length,
-    highRiskCount: history.filter((h) => h.risk_level === 'high').length,
-    suspiciousCount: history.filter((h) => h.risk_level === 'suspicious').length,
-    lowRiskCount: history.filter((h) => h.risk_level === 'low').length,
+  // Compute metrics based on active tab
+  const urlMetrics: SessionMetrics = {
+    totalScans: urlHistory.length,
+    highRiskCount: urlHistory.filter((h) => h.risk_level === 'high').length,
+    suspiciousCount: urlHistory.filter((h) => h.risk_level === 'suspicious').length,
+    lowRiskCount: urlHistory.filter((h) => h.risk_level === 'low').length,
   };
 
-  const handleScan = async (url: string) => {
-    setIsLoading(true);
-    setServerError(null);
+  const messageMetrics: SessionMetrics = {
+    totalScans: messageHistory.length,
+    highRiskCount: messageHistory.filter((h) => h.risk_level === 'high').length,
+    suspiciousCount: messageHistory.filter((h) => h.risk_level === 'suspicious').length,
+    lowRiskCount: messageHistory.filter((h) => h.risk_level === 'low').length,
+  };
+
+  // -------------------------------------------------------------------------
+  // URL Scan Handlers
+  // -------------------------------------------------------------------------
+  const handleUrlScan = async (url: string) => {
+    setIsUrlLoading(true);
+    setUrlServerError(null);
     setConnectionError(null);
 
     try {
-      // Call actual FastAPI backend endpoint
       const apiResponse = await scanUrlApi(url);
-
       const result: ScanResult = {
         ...apiResponse,
         id: `scan-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
         source: 'api',
       };
 
-      setCurrentResult(result);
+      setCurrentUrlResult(result);
       setBackendOnline(true);
+      setUrlResultCache((prev) => ({ ...prev, [result.id]: result }));
 
-      // Cache result for quick reload from session history
-      setResultCache((prev) => ({ ...prev, [result.id]: result }));
-
-      // Add to session history
       const historyItem: ScanHistoryItem = {
         id: result.id,
         url: result.url,
@@ -90,34 +121,99 @@ export default function DashboardPage() {
         source: 'api',
       };
 
-      setHistory((prev) => [historyItem, ...prev.filter((item) => item.url !== result.url)]);
+      setUrlHistory((prev) => [historyItem, ...prev.filter((item) => item.url !== result.url)]);
     } catch (err: unknown) {
       if (err instanceof BackendConnectionError) {
         setBackendOnline(false);
         setConnectionError(err.message);
-        setServerError(err.message);
+        setUrlServerError(err.message);
       } else if (err instanceof ValidationError) {
-        setServerError(err.message);
+        setUrlServerError(err.message);
       } else if (err instanceof Error) {
-        setServerError(err.message);
+        setUrlServerError(err.message);
       } else {
-        setServerError('An unknown error occurred while communicating with the scanner service.');
+        setUrlServerError('An unknown error occurred while scanning the URL.');
       }
     } finally {
-      setIsLoading(false);
+      setIsUrlLoading(false);
     }
   };
 
-  const handleSelectHistoricalScan = (item: ScanHistoryItem) => {
-    if (resultCache[item.id]) {
-      setCurrentResult(resultCache[item.id]);
-      setServerError(null);
+  const handleSelectHistoricalUrl = (item: ScanHistoryItem) => {
+    if (urlResultCache[item.id]) {
+      setCurrentUrlResult(urlResultCache[item.id]);
+      setUrlServerError(null);
     }
   };
 
-  const handleClearHistory = () => {
-    setHistory([]);
-    setResultCache({});
+  const handleClearUrlHistory = () => {
+    setUrlHistory([]);
+    setUrlResultCache({});
+  };
+
+  // -------------------------------------------------------------------------
+  // Message Scan Handlers
+  // -------------------------------------------------------------------------
+  const handleMessageScan = async (messageText: string) => {
+    setIsMessageLoading(true);
+    setMessageServerError(null);
+    setConnectionError(null);
+
+    try {
+      const apiResponse = await analyzeMessageApi(messageText);
+      const snippet = messageText.length > 90 ? `${messageText.substring(0, 87)}...` : messageText;
+      const result: MessageScanResult = {
+        ...apiResponse,
+        id: `msg-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+        messageSnippet: snippet,
+      };
+
+      setCurrentMessageResult(result);
+      setBackendOnline(true);
+      setMessageResultCache((prev) => ({ ...prev, [result.id]: result }));
+
+      const historyItem: MessageHistoryItem = {
+        id: result.id,
+        snippet,
+        timestamp: result.timestamp,
+        risk_level: result.risk_level,
+        risk_score: result.risk_score,
+      };
+
+      setMessageHistory((prev) => [historyItem, ...prev.filter((item) => item.snippet !== snippet)]);
+    } catch (err: unknown) {
+      if (err instanceof BackendConnectionError) {
+        setBackendOnline(false);
+        setConnectionError(err.message);
+        setMessageServerError(err.message);
+      } else if (err instanceof ValidationError) {
+        setMessageServerError(err.message);
+      } else if (err instanceof Error) {
+        setMessageServerError(err.message);
+      } else {
+        setMessageServerError('An unknown error occurred while analyzing the message.');
+      }
+    } finally {
+      setIsMessageLoading(false);
+    }
+  };
+
+  const handleSelectHistoricalMessage = (item: MessageHistoryItem) => {
+    if (messageResultCache[item.id]) {
+      setCurrentMessageResult(messageResultCache[item.id]);
+      setMessageServerError(null);
+    }
+  };
+
+  const handleClearMessageHistory = () => {
+    setMessageHistory([]);
+    setMessageResultCache({});
+  };
+
+  // Switch to URL scanner and pre-fill extracted URL
+  const handleInspectExtractedUrl = (url: string) => {
+    setPrefilledUrl(url);
+    setCurrentTab('scanner');
   };
 
   return (
@@ -131,7 +227,7 @@ export default function DashboardPage() {
         {/* Educational & Architecture Notice Banner */}
         <NoticeBanner backendOnline={backendOnline} />
 
-        {/* Responsive Layout with Sidebar and Main Panel */}
+        {/* Responsive Layout with Sidebar and Workspace */}
         <div className="flex flex-col lg:flex-row gap-6">
 
           {/* Navigation Sidebar */}
@@ -144,31 +240,84 @@ export default function DashboardPage() {
           {/* Primary Security Workspace */}
           <div className="flex-1 space-y-6">
 
-            {/* Session Activity & Summary Metrics */}
-            <SecurityCards metrics={metrics} />
+            {/* Top Workspace Tab Selector (Mobile / Quick Switcher) */}
+            <div className="flex border-b border-slate-800 bg-slate-900/40 rounded-xl p-1.5 gap-2 backdrop-blur-sm">
+              <button
+                type="button"
+                onClick={() => setCurrentTab('scanner')}
+                className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-semibold transition-all ${
+                  currentTab === 'scanner'
+                    ? 'bg-gradient-to-r from-cyan-500/20 to-blue-600/20 text-cyan-300 border border-cyan-500/40 shadow-sm'
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+                }`}
+              >
+                <Radar className="h-4 w-4" />
+                <span>URL Heuristic Scanner</span>
+              </button>
 
-            {/* URL Input Form */}
-            <UrlScannerForm
-              onScan={handleScan}
-              isLoading={isLoading}
-              serverError={serverError}
-              onClearServerError={() => setServerError(null)}
-            />
+              <button
+                type="button"
+                onClick={() => setCurrentTab('sms')}
+                className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-semibold transition-all ${
+                  currentTab === 'sms'
+                    ? 'bg-gradient-to-r from-cyan-500/20 to-blue-600/20 text-cyan-300 border border-cyan-500/40 shadow-sm'
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+                }`}
+              >
+                <MessageSquareWarning className="h-4 w-4" />
+                <span>SMS & Scam Message Classifier</span>
+              </button>
+            </div>
 
-            {/* Analysis Results Panel with loading, error, and empty states */}
-            <RiskAnalysisPanel
-              result={currentResult}
-              isLoading={isLoading}
-              connectionError={connectionError}
-              onRetry={verifyHealth}
-            />
+            {/* TAB 1: URL Scanner Workspace */}
+            {currentTab === 'scanner' && (
+              <div className="space-y-6">
+                <SecurityCards metrics={urlMetrics} />
+                <UrlScannerForm
+                  onScan={handleUrlScan}
+                  isLoading={isUrlLoading}
+                  serverError={urlServerError}
+                  onClearServerError={() => setUrlServerError(null)}
+                  initialUrl={prefilledUrl}
+                />
+                <RiskAnalysisPanel
+                  result={currentUrlResult}
+                  isLoading={isUrlLoading}
+                  connectionError={connectionError}
+                  onRetry={verifyHealth}
+                />
+                <RecentScans
+                  history={urlHistory}
+                  onSelectScan={handleSelectHistoricalUrl}
+                  onClearHistory={handleClearUrlHistory}
+                />
+              </div>
+            )}
 
-            {/* Recent Scans In-Memory List */}
-            <RecentScans
-              history={history}
-              onSelectScan={handleSelectHistoricalScan}
-              onClearHistory={handleClearHistory}
-            />
+            {/* TAB 2: SMS & Scam Message Classifier Workspace */}
+            {currentTab === 'sms' && (
+              <div className="space-y-6">
+                <SecurityCards metrics={messageMetrics} />
+                <MessageScannerForm
+                  onAnalyze={handleMessageScan}
+                  isLoading={isMessageLoading}
+                  serverError={messageServerError}
+                  onClearServerError={() => setMessageServerError(null)}
+                />
+                <MessageAnalysisPanel
+                  result={currentMessageResult}
+                  isLoading={isMessageLoading}
+                  connectionError={connectionError}
+                  onRetry={verifyHealth}
+                  onInspectUrl={handleInspectExtractedUrl}
+                />
+                <RecentMessages
+                  history={messageHistory}
+                  onSelectMessage={handleSelectHistoricalMessage}
+                  onClearHistory={handleClearMessageHistory}
+                />
+              </div>
+            )}
 
           </div>
         </div>
@@ -182,7 +331,7 @@ export default function DashboardPage() {
             <strong>BanglaShield</strong> — AI-Powered Cybersecurity Portfolio Project.
           </p>
           <p className="text-[11px] text-slate-400">
-            Current Stage: FastAPI Integration • Deterministic Heuristics • Zero Outbound Traffic Sandbox
+            Current Stage: URL Scanner & Bangla/Banglish Scam Message Classifier • Offline Heuristic Engine
           </p>
         </div>
       </footer>

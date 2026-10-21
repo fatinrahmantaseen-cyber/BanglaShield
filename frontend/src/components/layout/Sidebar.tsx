@@ -22,28 +22,24 @@ export function Sidebar({ currentTab = 'scanner', onSelectTab, backendOnline }: 
       label: 'URL Heuristics Scanner',
       icon: Radar,
       status: 'Live API',
-      active: true,
     },
     {
       id: 'sms',
-      label: 'SMS / Scam Classifier',
+      label: 'SMS / Scam Message Classifier',
       icon: MessageSquareWarning,
-      status: 'Phase 2',
-      active: false,
+      status: 'Live API',
     },
     {
       id: 'threat-feed',
       label: 'BD Threat Patterns',
       icon: Layers,
       status: 'Planned',
-      active: false,
     },
     {
       id: 'architecture',
       label: 'Architecture & Docs',
       icon: Server,
       status: 'FastAPI',
-      active: false,
     },
   ];
 
@@ -99,7 +95,7 @@ export function Sidebar({ currentTab = 'scanner', onSelectTab, backendOnline }: 
             <span>Architecture Stack</span>
           </div>
           <p className="text-slate-400 leading-relaxed mb-3">
-            Frontend sends JSON to the local FastAPI backend, receiving explainable heuristic scores.
+            Decoupled Next.js client communicating with local FastAPI heuristic microservices.
           </p>
           <div className="space-y-1.5 font-mono text-[11px] text-slate-400 border-t border-slate-800/80 pt-2">
             <div className="flex justify-between">
@@ -114,7 +110,7 @@ export function Sidebar({ currentTab = 'scanner', onSelectTab, backendOnline }: 
             </div>
             <div className="flex justify-between">
               <span className="text-slate-500">Engine:</span>
-              <span className="text-cyan-400">Heuristics v0.1</span>
+              <span className="text-cyan-400">URL + SMS Heuristics</span>
             </div>
           </div>
         </div>

@@ -1,6 +1,6 @@
 # BanglaShield — Backend API
 
-FastAPI backend providing deterministic, explainable heuristic URL analysis with a regional focus on digital scam patterns in Bangladesh.
+FastAPI backend providing deterministic, explainable heuristic URL analysis and SMS/scam-message classification with a regional focus on digital scam patterns in Bangladesh.
 
 ---
 
@@ -38,7 +38,7 @@ Verifies backend operational status.
   {
     "status": "healthy",
     "service": "BanglaShield Cybersecurity API",
-    "version": "0.1.0"
+    "version": "0.2.0"
   }
   ```
 
@@ -94,51 +94,96 @@ Statically analyzes a URL's structure using deterministic heuristic rules.
   }
   ```
 
+### `POST /api/v1/analyze-message`
+Analyzes an SMS or text message across Bangla, Banglish, and English for deceptive patterns.
+
+* **Request Body:**
+  ```json
+  {
+    "message": "Apnar bkash account 24 ghontar moddhe bondho hobe. Verify korte ei link e click korun: http://bkash-verify.xyz ebong otp din."
+  }
+  ```
+
+* **Example Response `200 OK`:**
+  ```json
+  {
+    "risk_level": "high",
+    "risk_score": 80,
+    "max_risk_score": 100,
+    "score_meaning": "Message Heuristic Risk Index (0 - 100): 0 = strictly standard transactional or benign patterns; 50+ = compounding scam indicators (e.g. brand impersonation combined with urgency, credential requests, or fee demands).",
+    "summary": "Multiple compounding social-engineering indicators detected. High likelihood of fraudulent lure.",
+    "indicators": [
+      {
+        "id": "brand-impersonation-risk",
+        "category": "brand_impersonation",
+        "title": "Potential Financial Brand Impersonation (BKASH)",
+        "description": "Message references recognizable financial/telecom service(s) [BKASH] in combination with high-pressure, payment, or credential request patterns.",
+        "status": "alert",
+        "score_impact": 25
+      },
+      {
+        "id": "urgency-coercive-pressure",
+        "category": "urgency_threat",
+        "title": "Coercive Urgency & Account Threat",
+        "description": "Threatens imminent account suspension, block, or closure to compel immediate user compliance with verification links or sensitive data sharing.",
+        "status": "alert",
+        "score_impact": 30
+      },
+      {
+        "id": "credential-harvesting-request",
+        "category": "credential_harvesting",
+        "title": "PIN / OTP / Password Request",
+        "description": "Explicitly asks the recipient to send, enter, or share a PIN, OTP, or secret code. Legitimate financial institutions and telcos NEVER request PINs or passwords via message.",
+        "status": "alert",
+        "score_impact": 40
+      },
+      {
+        "id": "link-suspicious-present",
+        "category": "suspicious_link",
+        "title": "Suspicious Link Embedded in Message",
+        "description": "Found 1 link(s), including unencrypted HTTP or high-abuse TLDs. Phishing smishing messages routinely direct victims to fake portals.",
+        "status": "alert",
+        "score_impact": 25
+      }
+    ],
+    "extracted_urls": [
+      "http://bkash-verify.xyz"
+    ],
+    "disclaimer": "BanglaShield uses deterministic heuristic analysis for educational scam recognition. Heuristic patterns may yield false positives or false negatives and cannot prove whether a message is genuinely authentic or fraudulent. This system does not claim to use machine learning.",
+    "is_rule_based": true,
+    "timestamp": "2026-10-22T00:50:00Z"
+  }
+  ```
+
 ---
 
-## 3. Deterministic Heuristic Scoring Rules
+## 3. Heuristic Scoring & Combination Logic
 
-The backend employs an additive, explainable scoring index from **0 to 100**. The final score is derived strictly from rule evaluation, not random generation or machine learning confidence:
+### URL Scanning Weights
+* Unencrypted HTTP: `+25`
+* Raw IP Host: `+45`
+* Userinfo Delimiter (`@`): `+35`
+* Brand Impersonation on Unofficial Host: `+40`
+* High-Abuse TLD (`.xyz`, `.top`, etc.): `+20`
+* Excessive Subdomain Depth: `+15`
+* Non-Standard Port: `+15`
 
-| Rule ID | Category | Condition | Impact | Status |
-| :--- | :--- | :--- | :--- | :--- |
-| `proto-http-unencrypted` | Protocol | Unencrypted `http://` scheme used | `+25` | Alert |
-| `host-ip-address` | Domain | Host is a raw IPv4/IPv6 literal | `+45` | Alert |
-| `auth-userinfo-delimiter`| Structure | `@` symbol present in authority | `+35` | Alert |
-| `regional-lure-mismatch` | Regional | Financial/telecom keyword on unofficial host | `+40` | Alert |
-| `domain-high-abuse-tld` | Domain | High-abuse TLD (`.xyz`, `.top`, `.buzz`, etc.) | `+20` | Warning |
-| `struct-subdomain-depth` | Structure | Subdomain depth exceeds 4 labels | `+15` | Warning |
-| `struct-non-standard-port`| Structure | Non-standard port specified (not 80/443) | `+15` | Warning |
-
-### Risk Level Categorization
-* **`0 - 15` — Low Risk:** No high-severity structural indicators flagged.
-* **`16 - 49` — Suspicious:** Non-standard attributes or suspicious TLD observed.
-* **`50 - 100` — High Risk:** Multiple compounding risk indicators observed.
-
----
-
-## 4. Security & Privacy Guarantees
-
-1. **Zero Outbound Traffic:** Submitted URLs are analyzed purely via lexical string parsing with standard library `urllib.parse`. The backend **never** makes DNS queries, ping requests, or socket connections to the target.
-2. **Safe Logging:** Server logs record request metadata (e.g. input string length, status code) but **never print or persist the raw URL string** to prevent leaking tokens or private parameters.
-3. **Strict Validation:** Only `http` and `https` schemes are accepted. Non-web schemes (`javascript:`, `file:`, `data:`, `ftp:`) and inputs exceeding 2048 characters are safely rejected with `422 Unprocessable Entity`.
+### Message Scam Analysis Weights & Correlation
+* Advance-Fee Prize/Lottery Claim: `+55`
+* Brand Impersonation with Coercion/Threat: `+25`
+* Coercive Urgency & Account Threats: `+30` (or `+15` standalone)
+* Credential Harvesting Demand (PIN/OTP): `+40`
+* Suspicious Embedded Link: `+25`
+* Standard Web Link: `+10`
+* **Legitimate Transaction Receipts (TrxID, Balance, Cash-in):** `0 pts` (Passed)
+* **Security Advisories ("Do not share OTP", "কাউকে বলবেন না"):** `0 pts` (Defensive compliance passed)
 
 ---
 
-## 5. Running Automated Tests
+## 4. Running Automated Tests
 
-To run the complete test suite:
+To run the complete test suite (36 tests):
 
 ```powershell
 .\.venv\Scripts\pytest.exe backend/tests -v
 ```
-
-This executes 21 automated unit and integration tests covering:
-* System health check
-* Valid HTTPS URLs and verified official domains
-* Unencrypted HTTP and IP address hosts
-* Regional lures and high-abuse TLDs
-* Subdomain depth and userinfo `@` delimiters
-* Malformed URLs and unsupported schemes
-* **Zero network request verification** (verifying that no socket or DNS traffic is generated)
-* Determinism verification (identical inputs yield identical scores)

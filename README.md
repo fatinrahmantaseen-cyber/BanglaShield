@@ -1,15 +1,15 @@
 # BanglaShield (বাংলাশিল্ড)
 
-[![FastAPI Tests](https://img.shields.io/badge/Backend%20Tests-21%20Passed-emerald.svg)](#running-automated-tests)
+[![FastAPI Tests](https://img.shields.io/badge/Backend%20Tests-36%20Passed-emerald.svg)](#running-automated-tests)
 [![Next.js](https://img.shields.io/badge/Frontend-Next.js%2016-blue.svg)](frontend/)
 [![FastAPI](https://img.shields.io/badge/Backend-FastAPI%200.158-cyan.svg)](backend/)
 [![Python](https://img.shields.io/badge/Python-3.14-blue.svg)](backend/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue.svg)](frontend/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-v4-38bdf8.svg)](frontend/)
 
-> **AI & Heuristic Cyber Defense Platform Focused on Protecting Users in Bangladesh**
+> **Heuristic Cyber Defense Platform Focused on Protecting Users in Bangladesh**
 
-BanglaShield is a cybersecurity portfolio project designed to identify deceptive URLs, fraudulent payment portals, and regional scam campaigns. It features a modern dark-navy cybersecurity dashboard and a decoupled FastAPI backend powered by a deterministic, explainable heuristic analysis engine.
+BanglaShield is a cybersecurity portfolio project designed to identify deceptive URLs, fraudulent payment portals, and regional scam messages (SMS / WhatsApp). It features a modern dark-navy cybersecurity dashboard and a decoupled FastAPI backend powered by deterministic, explainable heuristic analysis engines.
 
 ---
 
@@ -33,11 +33,11 @@ BanglaShield is a cybersecurity portfolio project designed to identify deceptive
 
 ## Motivation & Problem Statement
 
-Digital financial services (DFS) such as **bKash**, **Nagad**, and **Rocket**, along with major telecommunication providers (**Grameenphone**, **Robi**, **Banglalink**, **Teletalk**), have seen rapid adoption across Bangladesh. Consequently, malicious actors frequently deploy localized phishing lures—such as fake Eid bonuses, lottery winnings, and fraudulent cash-out verification pages—to compromise accounts.
+Digital financial services (DFS) such as **bKash**, **Nagad**, and **Rocket**, along with major telecommunication providers (**Grameenphone**, **Robi**, **Banglalink**, **Teletalk**), have seen rapid adoption across Bangladesh. Consequently, malicious actors frequently deploy localized social-engineering lures—such as fake Eid bonuses, lottery winnings, coercive account suspension notices, and fraudulent cash-out verification pages—to compromise accounts.
 
 BanglaShield was created to:
-1. Provide an educational cybersecurity platform specifically tuned to recognize regional social-engineering patterns.
-2. Deliver **explainable security indicators** so users understand *why* a link is dangerous, rather than presenting a black-box verdict.
+1. Provide an educational cybersecurity platform specifically tuned to recognize regional social-engineering patterns across **Bangla script**, **Banglish (Latin characters)**, and **English**.
+2. Deliver **explainable security indicators** so users understand *why* a link or message is suspicious, rather than presenting a black-box verdict.
 3. Serve as a clean, production-grade portfolio architecture demonstrating modern full-stack cybersecurity engineering.
 
 ---
@@ -53,7 +53,7 @@ BanglaShield is built using a **decoupled client-server architecture**:
 +-------------------------------------------------------------+
                               |
                      POST /api/v1/scan-url
-                     (JSON Payload: { url })
+                 POST /api/v1/analyze-message
                               |
                               v
 +-------------------------------------------------------------+
@@ -65,16 +65,17 @@ BanglaShield is built using a **decoupled client-server architecture**:
               |                               |
               v                               v
     +-------------------+           +-------------------+
-    | Safe URL Parsing  |           | Deterministic     |
-    | (urllib.parse)    |           | Heuristic Engine  |
-    | - Max 2048 chars  |           | - Scheme check    |
-    | - Scheme whitelist|           | - IP host check   |
-    | - Host validation |           | - BD brand lures  |
-    +-------------------+           | - Abuse TLD check |
-                                    | - Depth & ports   |
-                                    +-------------------+
-                                              |
-                              +---------------+
+    | URL Heuristic     |           | Multi-Lingual     |
+    | Analyzer          |           | Message Analyzer  |
+    | - Max 2048 chars  |           | - Max 4096 chars  |
+    | - Scheme check    |           | - Bangla script   |
+    | - IP host check   |           | - Banglish transl.|
+    | - Brand lures     |           | - English/Mixed   |
+    | - TLD entropy     |           | - Credential req. |
+    | - Port & userinfo |           | - Non-punitive    |
+    +-------------------+           +-------------------+
+              |                               |
+              +---------------+---------------+
                               |
                               v
              [ ZERO EXTERNAL NETWORK REQUESTS ]
@@ -88,10 +89,12 @@ BanglaShield is built using a **decoupled client-server architecture**:
 
 ## Key Features
 
-- **Local Sandbox Inspection:** Statically inspects submitted URLs without ever establishing an outbound network connection to the target domain.
-- **Regional Bangladesh Lure Detection:** Flags unofficial domains imitating national financial services (bKash, Nagad, Rocket, Upay) and telecom carriers.
-- **Structural Anomaly Recognition:** Detects raw IP-address hostnames, high-abuse top-level domains (`.xyz`, `.top`, `.buzz`, etc.), unencrypted HTTP protocols, non-standard web ports, and userinfo delimiters (`@`).
-- **Deterministic Heuristic Risk Index:** Computes a transparent numerical risk score from `0` to `100` with detailed breakdowns for each rule impact.
+- **Local Sandbox URL Inspection:** Statically inspects submitted URLs without ever establishing an outbound network connection to the target domain.
+- **Bangla, Banglish & English Message Analysis:** Identifies social-engineering patterns in native Bengali script, Banglish (Bengali transliterated with Latin characters), English, and mixed-language messages.
+- **Correlated Combination Scoring:** Reduces false positives on legitimate notifications by evaluating combinations of indicators. Mentioning a bank, bKash, or an OTP does not flag a message as a scam unless combined with coercive urgency, credential demands, or advance-fee payment requests.
+- **Safe Link Extraction:** Extracts web links found in messages without fetching them, allowing users to send the link to the URL Scanner with an explicit single click.
+- **Regional Bangladesh Lure Detection:** Flags unofficial domains and messages imitating national financial services (bKash, Nagad, Rocket, Upay) and telecom carriers.
+- **Deterministic Heuristic Risk Index:** Computes transparent numerical risk scores from `0` to `100` with detailed breakdowns for each rule impact.
 - **Full In-Memory Session History:** Allows users to review and reload previous scans during the active browser session without database tracking.
 - **Error Resilience:** Handles backend disconnection gracefully, offering one-click health retries and troubleshooting guidance.
 
@@ -101,7 +104,7 @@ BanglaShield is built using a **decoupled client-server architecture**:
 
 Transparency and academic integrity are fundamental to BanglaShield:
 
-- **Heuristics, Not Proof:** Heuristic analysis evaluates lexical indicators. It **cannot prove** that a website is definitely safe or malicious. A legitimate site may use a generic TLD, and an attacker can obtain a valid TLS certificate.
+- **Heuristics, Not Proof:** Heuristic analysis evaluates lexical indicators. It **cannot prove** that a website or message is definitely safe or malicious. A legitimate site may use a generic TLD, and an attacker can obtain a valid TLS certificate.
 - **No Machine Learning Claimed Yet:** The current engine uses deterministic, explainable heuristic scoring rules. It does **not** yet claim to use an active machine learning model or neural network.
 - **No Live Threat Feeds:** BanglaShield does not currently connect to external commercial threat intelligence blocklists.
 - **Responsible Use Notice:** BanglaShield is an academic portfolio project for educational and defensive research. Do not rely on it as a sole line of enterprise cybersecurity defense.
@@ -119,8 +122,9 @@ Transparency and academic integrity are fundamental to BanglaShield:
 
 ## Heuristic Scoring System
 
-The backend scores URLs on an additive **Heuristic Risk Index (0 - 100)**:
+The backend scores URLs and messages on an additive **Heuristic Risk Index (0 - 100)**:
 
+### 1. URL Scanning Rules
 | Rule Identifier | Category | Condition Checked | Score Weight | Status |
 | :--- | :--- | :--- | :--- | :--- |
 | `proto-http-unencrypted` | Protocol | URL uses plaintext `http://` instead of `https://` | `+25` | Alert |
@@ -131,10 +135,17 @@ The backend scores URLs on an additive **Heuristic Risk Index (0 - 100)**:
 | `struct-subdomain-depth` | Structure | Excessive subdomain nesting (> 4 labels) | `+15` | Warning |
 | `struct-non-standard-port`| Structure | Non-standard port specified (not 80 or 443) | `+15` | Warning |
 
-### Risk Level Categorization
-- **`0 - 15` (Low Risk):** Standard domain conventions and TLS encryption observed.
-- **`16 - 49` (Suspicious):** Moderate structural anomalies or disposable TLD observed.
-- **`50 - 100` (High Risk):** Multiple compounding indicators observed (e.g. unencrypted protocol + IP host or brand lure).
+### 2. Message Scam Analysis Rules
+| Rule Identifier | Category | Condition Checked | Score Weight | Status |
+| :--- | :--- | :--- | :--- | :--- |
+| `prize-advance-fee-lure` | Prize | Lottery/prize claim combined with payment request | `+55` | Alert |
+| `brand-impersonation-risk`| Brand | Brand mention combined with threat, urgency, or links | `+25` | Alert |
+| `urgency-coercive-pressure`| Urgency | Imminent threat to block/suspend account | `+30` | Alert |
+| `credential-harvesting-request`| Credentials | Demanding PIN, OTP, or secret password | `+40` | Alert |
+| `link-suspicious-present`| Links | Embedded link with unencrypted HTTP or high-abuse TLD | `+25` | Alert |
+| `link-standard-present` | Links | Standard web link embedded in message | `+10` | Warning |
+| `standard-transaction-format`| General | Authentic bank receipt format (TrxID, Balance) | `0` | Passed |
+| `security-advisory-compliant`| Credentials | Defensive warning ("Do not share OTP") | `0` | Passed |
 
 ---
 
@@ -148,7 +159,7 @@ The backend scores URLs on an additive **Heuristic Risk Index (0 - 100)**:
 {
   "status": "healthy",
   "service": "BanglaShield Cybersecurity API",
-  "version": "0.1.0"
+  "version": "0.2.0"
 }
 ```
 
@@ -204,6 +215,67 @@ The backend scores URLs on an additive **Heuristic Risk Index (0 - 100)**:
 }
 ```
 
+### 3. Scam Message Analysis
+`POST /api/v1/analyze-message`
+
+**Request Body:**
+```json
+{
+  "message": "Apnar bkash account 24 ghontar moddhe bondho hobe. Verify korte ei link e click korun: http://bkash-verify.xyz ebong otp din."
+}
+```
+
+**Response (`200 OK`):**
+```json
+{
+  "risk_level": "high",
+  "risk_score": 80,
+  "max_risk_score": 100,
+  "score_meaning": "Message Heuristic Risk Index (0 - 100): 0 = strictly standard transactional or benign patterns; 50+ = compounding scam indicators (e.g. brand impersonation combined with urgency, credential requests, or fee demands).",
+  "summary": "Multiple compounding social-engineering indicators detected. High likelihood of fraudulent lure.",
+  "indicators": [
+    {
+      "id": "brand-impersonation-risk",
+      "category": "brand_impersonation",
+      "title": "Potential Financial Brand Impersonation (BKASH)",
+      "description": "Message references recognizable financial/telecom service(s) [BKASH] in combination with high-pressure, payment, or credential request patterns.",
+      "status": "alert",
+      "score_impact": 25
+    },
+    {
+      "id": "urgency-coercive-pressure",
+      "category": "urgency_threat",
+      "title": "Coercive Urgency & Account Threat",
+      "description": "Threatens imminent account suspension, block, or closure to compel immediate user compliance with verification links or sensitive data sharing.",
+      "status": "alert",
+      "score_impact": 30
+    },
+    {
+      "id": "credential-harvesting-request",
+      "category": "credential_harvesting",
+      "title": "PIN / OTP / Password Request",
+      "description": "Explicitly asks the recipient to send, enter, or share a PIN, OTP, or secret code. Legitimate financial institutions and telcos NEVER request PINs or passwords via message.",
+      "status": "alert",
+      "score_impact": 40
+    },
+    {
+      "id": "link-suspicious-present",
+      "category": "suspicious_link",
+      "title": "Suspicious Link Embedded in Message",
+      "description": "Found 1 link(s), including unencrypted HTTP or high-abuse TLDs. Phishing smishing messages routinely direct victims to fake portals.",
+      "status": "alert",
+      "score_impact": 25
+    }
+  ],
+  "extracted_urls": [
+    "http://bkash-verify.xyz"
+  ],
+  "disclaimer": "BanglaShield uses deterministic heuristic analysis for educational scam recognition. Heuristic patterns may yield false positives or false negatives and cannot prove whether a message is genuinely authentic or fraudulent. This system does not claim to use machine learning.",
+  "is_rule_based": true,
+  "timestamp": "2026-10-22T00:50:00Z"
+}
+```
+
 ---
 
 ## Project Directory Structure
@@ -224,21 +296,23 @@ BanglaShield/
 │   │   │   └── config.py        # Settings (schemes, length limits, CORS)
 │   │   └── services/
 │   │       ├── __init__.py
-│   │       └── heuristic_analyzer.py # Pure offline heuristic analysis
+│   │       ├── heuristic_analyzer.py # Pure offline URL heuristic analysis
+│   │       └── message_analyzer.py   # Multi-lingual scam message heuristic analysis
 │   └── tests/
 │       ├── __init__.py
 │       ├── conftest.py          # Pytest fixtures and test client
 │       ├── test_health.py       # GET /health tests
-│       └── test_scanner.py      # 20 tests for validation, heuristics & zero-network guarantee
+│       ├── test_scanner.py      # 20 URL scanner tests
+│       └── test_message_analyzer.py # 15 scam message analyzer tests
 └── frontend/                    # Next.js frontend application
-    ├── package.json             # Frontend dependencies and scripts
+    ├── package.json             # Frontend dependency manifests
     ├── tsconfig.json            # TypeScript configuration
     ├── next.config.ts           # Next.js configuration
     └── src/
         ├── app/
         │   ├── layout.tsx       # Root layout & theme metadata
         │   ├── globals.css      # Dark cybersecurity CSS variables & glow utilities
-        │   └── page.tsx         # Dashboard page assembling components & state
+        │   └── page.tsx         # Dashboard page assembling tabs & state
         ├── components/
         │   ├── layout/
         │   │   ├── Navbar.tsx   # Top navigation with live backend connection indicator
@@ -246,10 +320,14 @@ BanglaShield/
         │   ├── dashboard/
         │   │   ├── NoticeBanner.tsx # Transparent heuristic notice & expander
         │   │   └── SecurityCards.tsx# Dynamic session metrics
-        │   └── scanner/
-        │       ├── UrlScannerForm.tsx   # Accessible URL input form with presets
-        │       ├── RiskAnalysisPanel.tsx# Heuristic breakdown, risk gauge & error states
-        │       └── RecentScans.tsx      # In-memory session history
+        │   ├── scanner/
+        │   │   ├── UrlScannerForm.tsx   # Accessible URL input form with presets
+        │   │   ├── RiskAnalysisPanel.tsx# URL heuristic breakdown & risk gauge
+        │   │   └── RecentScans.tsx      # In-memory session history
+        │   └── message/
+        │       ├── MessageScannerForm.tsx   # Multiline message input with presets
+        │       ├── MessageAnalysisPanel.tsx # Message heuristic breakdown & link inspector
+        │       └── RecentMessages.tsx       # In-memory message session history
         ├── lib/
         │   ├── api.ts           # Typed fetch client connecting to FastAPI
         │   └── demoScanner.ts   # Client-side format validator & fallback simulator
@@ -271,7 +349,7 @@ BanglaShield/
 
 ### 1. Clone the Repository
 ```powershell
-git clone https://github.com/your-username/BanglaShield.git
+git clone https://github.com/fatinrahmantaseen-cyber/BanglaShield.git
 cd BanglaShield
 ```
 
@@ -319,14 +397,16 @@ From the project root:
 ```powershell
 .\.venv\Scripts\pytest.exe backend/tests -v
 ```
-Executes **21 automated tests** covering:
+Executes **36 automated tests** covering:
 - Health check endpoint verification
 - Baseline HTTPS and recognized Bangladesh official domains
 - Unencrypted HTTP and raw IP address flags
 - Regional brand impersonation and high-abuse TLDs
 - Subdomain stacking and userinfo `@` delimiters
 - Malformed inputs, invalid schemes, and length bounds
-- **Zero Outbound Traffic Verification:** Socket and DNS interception test proving scanning makes no network calls
+- Bangla, Banglish, English, and mixed-language scam patterns
+- Non-punitive recognition of genuine transactional receipts and OTP warnings
+- **Zero Outbound Traffic Verification:** Socket and DNS interception tests proving zero network calls are made
 - Deterministic scoring consistency
 
 ### Frontend Verification (ESLint & Next.js Build)
@@ -346,24 +426,25 @@ npm run build
 
 ## Security & Privacy Guarantees
 
-1. **Complete Network Isolation:** Submitted target URLs are never pinged, resolved, or requested. All parsing is done in-memory via Python's standard `urllib.parse`.
-2. **Safe Logging (No URL Persistence):** The backend logs only operational telemetry (`input_length`, `status_code`, `risk_level`). Submitted URLs are never written to disk, server logs, or third-party monitoring services.
-3. **Strict Input Sanitization:** Rejects unsupported schemes (`javascript:`, `file:`, `data:`, `ftp:`) and enforces a strict 2048-character length limit to prevent buffer abuse.
+1. **Complete Network Isolation:** Submitted target URLs and message texts are never pinged, resolved, or requested. All parsing is done in-memory via Python's standard `urllib.parse` and regex.
+2. **Safe Logging (No Text Persistence):** The backend logs only operational telemetry (`input_length`, `status_code`, `risk_level`). Raw URLs and message contents are never written to disk, server logs, or third-party monitoring services.
+3. **Strict Input Sanitization:** Enforces length boundaries (2048 chars for URLs, 4096 chars for messages) and rejects unsupported schemes to prevent buffer abuse.
 4. **CORS Restricted:** Cross-Origin Resource Sharing is configured specifically for trusted local frontend origins (`http://localhost:3000`).
 
 ---
 
 ## Future Development Roadmap
 
-- [x] **Phase 1: Deterministic Heuristic Engine & Full-Stack UI** (Current)
+- [x] **Phase 1: Deterministic URL Heuristic Engine & Full-Stack UI**
   - Next.js 16 cybersecurity dashboard.
   - Decoupled FastAPI backend with offline heuristic rule-set.
-  - Zero outbound traffic sandbox and comprehensive test suite.
-- [ ] **Phase 2: Machine Learning URL Classifier**
-  - Train a scikit-learn / XGBoost classifier on lexical URL features (entropy, token ratios, n-grams).
-  - Provide comparative hybrid scoring (Heuristics + ML Prediction).
-- [ ] **Phase 3: Bangla & English Scam Message Classifier**
-  - NLP classifier for SMS and messaging lures (detecting fake lottery notices, lottery OTP requests, and emergency cash transfers).
+- [x] **Phase 2: Multi-Lingual Scam Message Analysis** (Current)
+  - Rule-based detection across Bangla script, Banglish, and English.
+  - Non-punitive recognition of authentic banking receipts and OTP notifications.
+  - Safe extracted link inspection workflow.
+- [ ] **Phase 3: Machine Learning Model Integration**
+  - Train a scikit-learn / XGBoost classifier on lexical features and NLP token n-grams.
+  - Hybrid scoring (Heuristics + ML Prediction).
 - [ ] **Phase 4: Threat Intelligence & Reporting API**
   - PostgreSQL database for anonymous aggregated threat telemetry.
   - Community reporting endpoint for newly emerging Bangladesh phishing campaigns.

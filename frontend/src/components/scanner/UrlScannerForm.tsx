@@ -9,6 +9,7 @@ interface UrlScannerFormProps {
   isLoading: boolean;
   serverError?: string | null;
   onClearServerError?: () => void;
+  initialUrl?: string;
 }
 
 export function UrlScannerForm({
@@ -16,9 +17,17 @@ export function UrlScannerForm({
   isLoading,
   serverError,
   onClearServerError,
+  initialUrl,
 }: UrlScannerFormProps) {
-  const [inputUrl, setInputUrl] = useState('');
+  const [inputUrl, setInputUrl] = useState(initialUrl || '');
+  const [prevInitialUrl, setPrevInitialUrl] = useState<string | undefined>(initialUrl);
   const [validationError, setValidationError] = useState<string | null>(null);
+
+  if (initialUrl && initialUrl !== prevInitialUrl) {
+    setPrevInitialUrl(initialUrl);
+    setInputUrl(initialUrl);
+    setValidationError(null);
+  }
 
   // Quick test presets matching common cybersecurity scenarios
   const demoPresets = [
